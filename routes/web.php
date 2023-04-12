@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\admin\AdminController;
+use App\Http\Controllers\onlineVendor\VendorController;
 
 /*
 |--------------------------------------------------------------------------
@@ -19,7 +20,7 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Auth::routes();
+Auth::routes(['verify'=>true]);
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
@@ -32,20 +33,16 @@ Route::prefix('/admin')->group(function () {
     Route::post('/authenticator', [AdminController::class, 'adminAuthenticate'])->name('admin.authenticate');
 
     Route::group(['middleware' => ['admin']], function () {
-        Route::get('/logout', [AdminController::class, 'logout']);
 
-        Route::view('/settings', 'admin.settings')->name('admin.settingsPage');
-
-        Route::post('/check-current-admin-password', [AdminController::class, 'checkAdminPassword'])->name('admin.checkPassword');
-
-        Route::post('/update-admin-password', [AdminController::class, 'updateAdminPassword'])->name('admin.updatePassword');
-
-        // UPDATE ADMIN DETAILS
-
-        Route::post('/update-admin-profile', [AdminController::class,'updateAdminProfile'])->name('admin.updateProfile');
-
-        //admin dashboard Route
-        Route::view('/dashboard', 'admin.dashboard')->name('admin.dashboard');
+        Route::middleware(['verified'])->group(function () {
+            Route::get('/logout', [AdminController::class, 'logout']);
+            Route::view('/settings', 'admin.settings')->name('admin.settingsPage');
+            Route::post('/check-current-admin-password', [AdminController::class, 'checkAdminPassword'])->name('admin.checkPassword');
+            Route::post('/update-admin-password', [AdminController::class, 'updateAdminPassword'])->name('admin.updatePassword');
+            Route::post('/update-admin-profile', [AdminController::class,'updateAdminProfile'])->name('admin.updateProfile');
+            Route::view('/dashboard', 'admin.dashboard')->name('admin.dashboard');
+            
+        });
     });
 });
 
@@ -55,7 +52,21 @@ Route::prefix('/admin')->group(function () {
 Route::prefix('/vendor')->group(function () {
     // onlineVendor Login
     Route::view('/login', 'onlineVendor.login')->name('vendor.login');
-    Route::view('/register', 'onlineVendor.register')->name('vendor.register');;
-    //onlineVendor dashboard Route
+    Route::view('/register', 'onlineVendor.register')->name('vendor.register');
+    Route::post('/authenticator', [VendorController::class, 'store'])->name('vendor.authenticate');
+    Route::post('/logout', [VendorController::class, 'logout'])->name('vendor.logout');
+
     Route::view('/dashboard', 'onlineVendor.dashboard')->name('vendor.dashboard');
+    
+    
+    Route::group(['middleware'=>['vendor']],function(){
+
+        Route::match(['get','post'],'/update-vendor-details/{id}',[VendorController::class,'updateVendorDetails'])->name('vendor.updateDetails');
+
+
+    });
+
+
+
+    //onlineVendor dashboard Route
 });

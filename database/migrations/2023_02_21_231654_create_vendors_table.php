@@ -18,9 +18,9 @@ return new class extends Migration
             $table->string('password');
             $table->string('phone')->unique();
             $table->string('social_media');
-            $table->string('social_media_profile_url')->unique();
-            $table->string('avatar');
-            $table->string('country_of_residence');
+            $table->string('social_media_profile_url')->unique()->nullable();
+            $table->string('avatar')->nullable();
+            $table->string('country_of_residence')->nullable();
             $table->tinyInteger('status');
             $table->timestamps();
         });
